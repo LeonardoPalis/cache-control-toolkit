@@ -1,10 +1,10 @@
 import typescript from 'rollup-plugin-typescript';
 
 export default [{
-  input: './index.ts',
+  input: './src/lib/index.ts',
   output: {
-    dir: 'core',
+    dir: 'lib',
     format: 'cjs'
   },
-  plugins: [typescript({lib: ["es5", "es6", "dom"], target: "es5"})]
+  plugins: [typescript({lib: ["es5", "es6", "dom"], target: "es6"})]
 },];
