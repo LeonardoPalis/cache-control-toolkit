@@ -23,6 +23,6 @@ export class ConfigRegister {
   }
 
   isValid() {
-    return Object.values(TimeTypes).includes(this.ttl.type) && this.ttl.time > 0;
+    return Object.values(TimeTypes).includes(this.ttl.type) && this.ttl.time >= 0;
   }
 }

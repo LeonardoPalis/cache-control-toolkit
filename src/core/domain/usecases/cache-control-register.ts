@@ -1,5 +1,4 @@
-import { ConfigRegister } from "../model/config-register";
-
+import { IConfigRegister } from "../../data/models/config-register";
 export interface CacheControlRegister {
-  register: (config: ConfigRegister) => void;
+  register: (config: IConfigRegister) => void;
 }

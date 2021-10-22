@@ -15,14 +15,12 @@ import { SetStorage } from "../core/infra/storage/set-storage";
 export class CacheControlToolkit {
   static register(config: ConfigRegister) {
     const setStorage: SetStorage<ConfigRegister> = new SetStorageImpl();
-    const setStorageString: SetStorage<string> = new SetStorageImpl();
     const getStorage: GetStorage = new GetStorageImpl();
     const clearStorage: ClearStorage = new ClearStorageImpl();
     const keyRegister: KeyRegister = new KeyRegisterImpl();
-    const keyUnregister: KeyUnregister = new KeyUnregisterImpl(getStorage, setStorageString, clearStorage);
+    const keyUnregister: KeyUnregister = new KeyUnregisterImpl(getStorage, clearStorage);
     const cacheControl: CacheControlRegister = new CacheControlRegisterImpl(
       setStorage,
-      clearStorage,
       keyRegister,
       getStorage,
       keyUnregister,

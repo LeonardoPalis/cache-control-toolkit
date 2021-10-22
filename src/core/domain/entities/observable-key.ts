@@ -4,6 +4,6 @@ import { Unregister } from "./unregister";
 export type ObservableKey = {
   key: string;
   ttl: Time;
-  callback?: Function;
+  callback?: () => void;
   unregister: Unregister;
 }

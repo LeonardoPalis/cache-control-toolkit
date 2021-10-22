@@ -1,38 +1,27 @@
 import { ConfigRegister } from "../../domain/model/config-register";
 import { RegisteredKey } from "../../domain/model/registered-key";
-import { convertTimeToMiliseconds } from "../../domain/types/time";
-import { UnregisterMode } from "../../domain/types/unregister";
+import { ObservableKey } from "../../domain/entities/observable-key";
+import { convertTimeToMiliseconds } from "../../domain/entities/time";
+import { UnregisterMode } from "../../domain/entities/unregister";
 import { CacheControlRegister } from "../../domain/usecases/cache-control-register";
 import { KeyRegister } from "../../domain/usecases/key-register";
 import { KeyUnregister } from "../../domain/usecases/key-unregister";
-import { ClearStorage } from "../../infra/storage/clear-storage";
 import { GetStorage } from "../../infra/storage/get-storage";
 import { SetStorage } from "../../infra/storage/set-storage";
 import { StorageMapper } from "../../utils/enums/storage-mapper";
+import { IConfigRegister } from "../contracts/config-register";
+import { ConfigRegisterValidator } from "../validators/config-register-validator";
 
 export class CacheControlRegisterImpl implements CacheControlRegister {
-  setStorage: SetStorage<ConfigRegister | any>;
-  getStorage: GetStorage;
-  clearStorage: ClearStorage;
-  keyRegister: KeyRegister;
-  keyUnregister: KeyUnregister;
-
   constructor(
-    setStorage: SetStorage<ConfigRegister>,
-    clearStorage: ClearStorage,
-    keyRegister: KeyRegister,
-    getStorage: GetStorage,
-    keyUnregister: KeyUnregister
-  ) {
-    this.setStorage = setStorage;
-    this.clearStorage = clearStorage;
-    this.keyRegister = keyRegister;
-    this.getStorage = getStorage;
-    this.keyUnregister = keyUnregister;
-  }
+    private readonly setStorage: SetStorage<ConfigRegister> | any,
+    private readonly keyRegister: KeyRegister,
+    private readonly getStorage: GetStorage,
+    private readonly keyUnregister: KeyUnregister,
+  ) {}
 
-  _handleObservableChanges(config: ConfigRegister) {
-    config.observableKeys.forEach((observableKey) => {
+  private handleObservableChanges(config: IConfigRegister) {
+    config.observableKeys.forEach((observableKey: ObservableKey) => {
       const observableKeyTargetValue = this.getStorage.recovery(
         observableKey.key
       );
@@ -58,21 +47,21 @@ export class CacheControlRegisterImpl implements CacheControlRegister {
     });
   }
 
-  _handleObservableChangesWithInterval(config: ConfigRegister) {
+  private handleObservableChangesWithInterval(config: IConfigRegister) {
     const cicleTimeMiliseconds = convertTimeToMiliseconds(config.cicleTime);
     setInterval(() => {
-      this._handleObservableChanges(config);
-    }, cicleTimeMiliseconds)
-  }
-
-  _handleIntervalRegisterObservable(config: ConfigRegister) {
-    const cicleTimeMiliseconds = convertTimeToMiliseconds(config.cicleTime);
-    setInterval(() => {
-      this._handleRegister(UnregisterMode.deleteOnTime);
+      this.handleObservableChanges(config);
     }, cicleTimeMiliseconds);
   }
 
-  _handleRegister(mode: UnregisterMode) {
+  private handleIntervalRegisterObservable(config: IConfigRegister) {
+    const cicleTimeMiliseconds = convertTimeToMiliseconds(config.cicleTime);
+    setInterval(() => {
+      this.handleRegister(UnregisterMode.deleteOnTime);
+    }, cicleTimeMiliseconds);
+  }
+
+  private handleRegister(mode: UnregisterMode) {
     const allKeyRegister = this.getStorage.recovery(
       StorageMapper.registeredKeyPrefix,
       { includes: true }
@@ -87,19 +76,19 @@ export class CacheControlRegisterImpl implements CacheControlRegister {
     }
   }
 
-  _handleWaitToClose() {
+  private _handleWaitToClose() {
     window.addEventListener("beforeunload", () => {
-      this._handleRegister(UnregisterMode.waitToCloseSite);
+      this.handleRegister(UnregisterMode.waitToCloseSite);
     });
   }
 
-  register(config: ConfigRegister) {
-    if (config.isValid()) {
-      this._handleObservableChangesWithInterval(config);
+  register(config: IConfigRegister) {
+    if (ConfigRegisterValidator.useConfig(config).isValid()) {
+      this.handleObservableChangesWithInterval(config);
     } else {
       console.info("Config register is invalid or has been alread started");
     }
-    this._handleIntervalRegisterObservable(config);
+    this.handleIntervalRegisterObservable(config);
     this._handleWaitToClose();
   }
 }

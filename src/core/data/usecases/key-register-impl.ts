@@ -5,14 +5,14 @@ import { KeyRegister } from "../../domain/usecases/key-register";
 import { StorageMapper } from "../../utils/enums/storage-mapper";
 
 export class KeyRegisterImpl implements KeyRegister {
-  _createTag(key: string): string {
+  private createTag(key: string): string {
     return `${StorageMapper.registeredKeyPrefix}${key}`;
   }
 
   execute(observableKey: ObservableKey) : RegisteredKey {
     const expiresAt = new Date(new Date().getTime() + convertTimeToMiliseconds(observableKey.ttl));
     return {
-      tag: this._createTag(observableKey.key),
+      tag: this.createTag(observableKey.key),
       expiresAt,
       registeredAt: new Date(),
       unregistered: observableKey.unregister,
